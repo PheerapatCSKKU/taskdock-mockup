@@ -1,0 +1,59 @@
+# taskdock — Mockup
+
+ต้นแบบเว็บแอป **Unified Academic Task Tracking Platform for Students**
+โครงงานรายวิชา GE362785 การคิดเชิงสร้างสรรค์และการแก้ปัญหา
+
+> ข้อมูลทั้งหมดเป็นข้อมูลสมมติ ไม่ได้เชื่อมต่อระบบจริง ไม่มีการเข้าสู่ระบบ และไม่ขอรหัสผ่านของแพลตฟอร์มใด
+
+## วิธีเปิด
+
+ต้องมี Node.js 20 ขึ้นไป
+
+```bash
+npm install
+npm run dev
+```
+
+แล้วเปิด http://localhost:5173
+
+## สิ่งที่มีในต้นแบบ
+
+| หน้า | สิ่งที่ทำได้ |
+|---|---|
+| แดชบอร์ด | สรุปจำนวนงาน งานใกล้ครบกำหนด งานสำคัญ อัปเดตล่าสุด ปฏิทินย่อ ติ๊กส่งงาน |
+| งานทั้งหมด | ค้นหา กรองตามวิชา/สถานะ/ความสำคัญ/ระบบ เรียงลำดับ เปลี่ยนสถานะในตาราง |
+| ปฏิทิน | กำหนดส่งรายเดือน เลือกวันเพื่อดูงาน รายการที่กำลังจะถึง |
+| แหล่งข้อมูล | การ์ด 6 ระบบ ซิงก์ เชื่อมต่อ/ยกเลิก ดูข้อมูลดิบจาก API ตัวอย่างแจ้งเตือน LINE |
+| สถิติของฉัน | ความคืบหน้าแยกตามวิชา ระบบต้นทาง และช่วงเวลา |
+
+ปุ่มกระดิ่งมุมขวาบนแสดงการแจ้งเตือนงานใกล้ครบกำหนด ปุ่ม "เพิ่มงาน" ใช้เพิ่มงานด้วยตนเอง
+สถานะที่เปลี่ยนและงานที่เพิ่มเองจะถูกเก็บในเบราว์เซอร์ (localStorage) กด "รีเซ็ตข้อมูลตัวอย่าง" ในหน้าแหล่งข้อมูลเพื่อล้าง
+
+## API จำลอง 6 ระบบ
+
+dev server มี mock API ในตัว (เขียนด้วย Node + TypeScript ใน `mock/plugin.ts`)
+แต่ละระบบตอบ JSON คนละโครงสร้าง แล้ว `src/api/normalize.ts` แปลงให้เป็นรูปแบบงานเดียวกัน
+
+| ระบบ | Endpoint | รูปแบบข้อมูลจำลอง |
+|---|---|---|
+| E-learning | `GET /mock-api/elearning/webservice/rest/server.php?wsfunction=mod_assign_get_assignments` | แบบ Moodle Web Service (วันที่เป็น unix seconds, รายละเอียดเป็น HTML) |
+| I-learning | `GET /mock-api/ilearning/api/v1/student/tasks` | REST ทั่วไป (วันที่เป็นข้อความ `YYYY-MM-DD HH:mm`) |
+| Google Classroom | `GET /mock-api/classroom/v1/courses/-/courseWork` | แบบ Classroom API v1 (วันและเวลาแยกฟิลด์ เป็น UTC) |
+| KKU Exam | `GET /mock-api/kkuexam/api/exams/upcoming` | ตารางสอบ (ISO 8601) |
+| GE Canvas | `GET /mock-api/gecanvas/api/v1/users/self/assignments` | แบบ Canvas LMS API (snake_case) |
+| Cisco NetAcad | `GET /mock-api/cisco/api/learner/assignments` | กิจกรรมของผู้เรียน พร้อมเปอร์เซ็นต์ความคืบหน้า |
+
+กำหนดส่งของงานตัวอย่างคำนวณจากวันที่เปิดเว็บ จึงมีงานใกล้ครบกำหนดและงานเลยกำหนดให้เห็นเสมอ
+
+## โครงสร้างโค้ด
+
+```
+mock/        ข้อมูลสมมติ + mock API server (Vite middleware)
+src/api/     เรียก API, แปลงข้อมูล, รายละเอียดของแต่ละระบบ
+src/pages/   5 หน้าหลัก
+src/components/  เมนู แถบบน ลิ้นชักรายละเอียดงาน ฟอร์มเพิ่มงาน การแจ้งเตือน
+src/store.tsx    สถานะรวมของแอป
+```
+
+`npm run build` สร้างไฟล์ static ใน `dist/` — ถ้านำไปวางบนโฮสต์ที่ไม่มี mock API server
+แอปจะสร้างข้อมูลจำลองชุดเดียวกันในเบราว์เซอร์แทนโดยอัตโนมัติ
