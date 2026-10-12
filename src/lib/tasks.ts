@@ -15,6 +15,10 @@ const PRIORITY_RANK: Record<Priority, number> = { high: 0, medium: 1, low: 2 };
 
 export const isOverdue = (t: Task, now: Date) => t.status !== 'done' && new Date(t.dueAt).getTime() < now.getTime();
 
+export function movableTask(tasks: Task[], draggedId: string | null, transferId: string, status: TaskStatus): Task | undefined {
+  return tasks.find((task) => task.id === draggedId && task.id === transferId && task.status !== status);
+}
+
 export function isDueSoon(t: Task, now: Date): boolean {
   if (t.status === 'done') return false;
   const ms = new Date(t.dueAt).getTime() - now.getTime();

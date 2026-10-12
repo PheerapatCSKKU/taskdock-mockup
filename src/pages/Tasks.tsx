@@ -1,8 +1,9 @@
 import { Search, X } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { PROVIDER_IDS } from '../../mock/types';
 import { sourceMeta } from '../api/providers';
 import { DoneCheck, PriorityMark, SourceTag, StateChip } from '../components/bits';
+import { KanbanBoard } from '../components/KanbanBoard';
 import { dueLabel, remainingLabel } from '../lib/date';
 import { byDue, byPriority, isOverdue, PRIORITY_LABEL, STATUS_LABEL } from '../lib/tasks';
 import { useStore, useUi } from '../store';
@@ -21,6 +22,8 @@ export function Tasks() {
   const [priority, setPriority] = useState<'all' | Priority>('all');
   const [source, setSource] = useState<'all' | SourceId>('all');
   const [sort, setSort] = useState<Sort>('due');
+  const [view, setView] = useState<'table' | 'board'>('table');
+  const resultRef = useRef<HTMLSpanElement>(null);
 
   const courses = useMemo(() => {
     const map = new Map<string, string>();
@@ -57,7 +60,7 @@ export function Tasks() {
       <div className="page-head">
         <div>
           <h1>งานทั้งหมด</h1>
-          <p className="lead">รวมงานจากทุกระบบไว้ในตารางเดียว กดที่แถวเพื่อดูรายละเอียดหรือเปลี่ยนสถานะ</p>
+          <p className="lead">รวมงานจากทุกระบบ ดูเป็นตารางหรือกระดาน และเปลี่ยนสถานะได้ในที่เดียว</p>
         </div>
       </div>
 
@@ -109,7 +112,7 @@ export function Tasks() {
         </div>
 
         <div className="result-line">
-          <span>
+          <span ref={resultRef} tabIndex={-1}>
             แสดง {filtered.length} จาก {tasks.length} รายการ
           </span>
           {filtering && (
@@ -119,7 +122,12 @@ export function Tasks() {
           )}
         </div>
 
-        <div className="table-wrap">
+        <div className="task-view-toggle segmented" role="group" aria-label="รูปแบบการแสดงงาน">
+          <button type="button" className={view === 'table' ? 'is-on' : ''} aria-pressed={view === 'table'} onClick={() => setView('table')}>ตาราง</button>
+          <button type="button" className={view === 'board' ? 'is-on' : ''} aria-pressed={view === 'board'} onClick={() => setView('board')}>กระดาน</button>
+        </div>
+
+        {view === 'board' ? <KanbanBoard tasks={filtered} resultRef={resultRef} /> : <div className="table-wrap">
           <table className="ttable">
             <thead>
               <tr>
@@ -182,7 +190,8 @@ export function Tasks() {
           {filtered.length === 0 && (
             <p className="empty">{booting ? 'กำลังดึงงานจากทุกระบบ…' : 'ไม่พบงานที่ตรงกับเงื่อนไข ลองล้างตัวกรองหรือค้นหาด้วยคำอื่น'}</p>
           )}
-        </div>
+        </div>}
+        {view === 'board' && filtered.length === 0 && <p className="empty">{booting ? 'กำลังดึงงานจากทุกระบบ…' : 'ไม่พบงานที่ตรงกับเงื่อนไข ลองล้างตัวกรองหรือค้นหาด้วยคำอื่น'}</p>}
       </section>
     </div>
   );
